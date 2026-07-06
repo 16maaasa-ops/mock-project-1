@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { webhook } from "@line/bot-sdk";
 import { isValidLineSignature } from "@/lib/line/verify";
-import { replyText, pushText } from "@/lib/line/client";
+import { replyText, pushText, getDisplayName } from "@/lib/line/client";
 import { getFaqAnswer } from "@/lib/ai/responder";
 import { getSettings, updateSettings } from "@/lib/settings";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -49,11 +49,11 @@ async function markAnswered(conversationId: string, answer: string) {
     .eq("id", conversationId);
 }
 
-async function markEscalated(conversationId: string) {
+async function markEscalated(conversationId: string, displayName: string | null) {
   const supabase = getSupabaseServerClient();
   await supabase
     .from("conversations")
-    .update({ status: "escalated" })
+    .update({ status: "escalated", display_name: displayName })
     .eq("id", conversationId);
 }
 
@@ -148,14 +148,16 @@ async function handleEvent(
     await safeReply(settings.line_channel_access_token, messageEvent.replyToken, HOLDING_MESSAGE);
   }
 
-  await markEscalated(conversationId);
+  const displayName = await getDisplayName(settings.line_channel_access_token, userId);
+  await markEscalated(conversationId, displayName);
 
   if (settings.owner_line_user_id_confirmed && settings.owner_line_user_id) {
     const appUrl = process.env.APP_URL ?? "";
+    const fromLine = displayName ? `お客様（${displayName}さん）より:\n` : "";
     await pushText(
       settings.line_channel_access_token,
       settings.owner_line_user_id,
-      `【未回答の質問】\n${text}\n\n管理画面で確認: ${appUrl}/admin`,
+      `【未回答の質問】\n${fromLine}${text}\n\nLINEのトーク一覧から${displayName ? `「${displayName}」さんを探して` : "該当のお客様を探して"}直接ご返信ください。\n管理画面で確認: ${appUrl}/admin`,
     );
   }
 }

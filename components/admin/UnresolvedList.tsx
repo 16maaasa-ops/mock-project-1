@@ -32,7 +32,14 @@ export function UnresolvedList({
     <div className="space-y-3">
       {conversations.map((c) => (
         <Card key={c.id}>
-          <p className="text-xs text-gray-400">{formatTime(c.created_at)}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-gray-400">{formatTime(c.created_at)}</p>
+            {c.display_name && (
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {c.display_name} さん
+              </p>
+            )}
+          </div>
           <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
             {c.message_text}
           </p>

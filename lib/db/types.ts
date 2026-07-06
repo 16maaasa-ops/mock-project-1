@@ -21,6 +21,7 @@ export type Conversation = {
   line_message_id: string | null;
   message_text: string;
   answer_text: string | null;
+  display_name: string | null;
   status: ConversationStatus;
   resolved_at: string | null;
   created_at: string;
