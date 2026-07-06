@@ -26,12 +26,22 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        setError("IDまたはパスワードが正しくありません");
+        if (res.status === 401) {
+          setError("IDまたはパスワードが正しくありません");
+        } else {
+          setError(
+            "サーバーでエラーが発生しました。しばらくしてから再度お試しください。",
+          );
+        }
         return;
       }
 
       router.push("/admin");
       router.refresh();
+    } catch {
+      setError(
+        "通信に失敗しました。インターネット接続を確認し、再度お試しください。",
+      );
     } finally {
       setPending(false);
     }
